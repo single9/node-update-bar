@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh_TW">
+  <head>
+    <title>NPM Update Bar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+
+    progress {
+      background-color: #eee;
+      border: none;
+      height: 18px;
+      border-radius: 2px;
+      -webkit-appearance: none;
+    }
+
+    .progress.bar {
+      width: 100%; height:20px;
+    }
+    .progress.bar .valbox span{
+      width: 80%;
+      display: block;
+      text-indent: -9999px;
+    }
+
+    progress::-webkit-progress-bar {
+      background-color: #eee;
+      border-radius: 2px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
+    }
+
+    progress::-webkit-progress-value {
+      background-image:
+      -webkit-linear-gradient(-45deg, 
+                              transparent 33%, rgba(0, 0, 0, .1) 33%, 
+                              rgba(0,0, 0, .1) 66%, transparent 66%),
+      -webkit-linear-gradient(top, 
+                              rgba(255, 255, 255, .25), 
+                              rgba(0, 0, 0, .25)),
+      -webkit-linear-gradient(left, #44f, #99f);
+
+      border-radius: 2px; 
+      background-size: 35px 20px, 100% 100%, 100% 100%;
+
+      animation: run 5s linear infinite;
+      -webkit-animation: run 5s linear infinite;
+    }
+
+    label[data-value]:after {
+        content: attr(data-value) '%';
+        position: absolute; right:0;
+    }
+
+    @keyframes run { 
+      0% {background-position: 0px 0px, 0 0, 0 0}
+      100% {background-position: -100px 0px, 0 0, 0 0}
+    }
+    </style>
+  </head>
+  <body>
+    <!-- 進度條 -->
+    <div class="progress">
+      <label id="progress-val" class="progress val" for="progress" data-value="">Progress</label>
+      <progress id="progress" class="progress bar" max="100" value="0"></progress>
+    </div>
+
+    <script>
+      // Socket.io 連接
+      var socket = io();
+      var bar = document.getElementById('progress');
+      var val = document.getElementById('progress-val');
+
+      // 監聽進度事件
+      socket.on('progress', function (data) {
+        // 重設進度條最大值為回傳值之最大值
+        bar.max = data.total;
+        // 設定進度條目前的值
+        bar.value = data.item;
+        // 設定 label 的 data-value 值
+        val.setAttribute('data-value', Math.floor((data.item / data.total) * 100));
+      });
+
+      // 3 秒後送出更新請求
+      setTimeout(() => {
+        socket.emit('update');
+      }, 3000);
+    </script>
+  </body>
+</html>
